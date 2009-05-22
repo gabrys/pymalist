@@ -3,12 +3,12 @@ import smtplib
 import email
 
 class DistributeToDistributor(object):
-    def __init__(self, recipient, distributor):
-        self.recipient = recipient
+    def __init__(self, recipients, distributor):
+        self.recipients = recipients
         self.distributor = distributor
 
     def distribute(self, list, sender, message, recipients):
-        self.distributor.distribute(list, sender, self.recipient, message)
+        self.distributor.distribute(list, sender, message, self.recipients)
 
 class SmtpDistributor(object):
     def __init__(self, host='localhost', user=None, password='', ssl=False, tls=False):
