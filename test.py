@@ -1,4 +1,3 @@
-
 from pymalist import play
 from fetchers import *
 from processors import *
@@ -23,7 +22,7 @@ play(
     fetcher = pop3,
     distributor = ChainDistributor(
         smtp,
-        DistributeToDistributor('archive@host.com', smtp),
+        DistributeToDistributor(['archive@host.com'], smtp),
     ),
     processor=SingleListProcessor(
         list_mail = 'list@host.com',
