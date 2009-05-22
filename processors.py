@@ -1,4 +1,4 @@
 
 class DummyProcessor(object):
     def process(self, mail):
-        return '', '', '', []
+        return '', '', mail, ['piotr@gabryjeluk.pl']
