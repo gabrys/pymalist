@@ -1,7 +1,11 @@
-#!/usr/bin/env python
-# encoding: utf-8
 
-from exceptions import NothingMore
+from fetchers import NothingMore
+
+def react(reactor, type, exception):
+    try:
+        reactor.react(type, exception)
+    except:
+        pass
 
 def play(fetcher, processor, distributor, reactor):
     while True:
@@ -10,16 +14,16 @@ def play(fetcher, processor, distributor, reactor):
         except NothingMore:
             return
         except Exception, e:
-            reactor.react('fetcher', e)
+            react(reactor, 'fetcher', e)
             return
 
         try:
-            addresses, message = processor.process(mail)
+            list, sender, message, recipients = processor.process(mail)
         except Exception, e:
-            reactor.react('processor', e)
+            react(reactor, 'processor', e)
         else:
             try:
-                distributor.distribute(addresses, message)
+                distributor.distribute(list, sender, message, recipients)
             except Exception, e:
-                reactor.react('distributor', e)
+                react(reactor, 'distributor', e)
 
