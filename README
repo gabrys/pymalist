@@ -1,14 +1,18 @@
++ What is pymalist
+
 Pymalist is a minimal and modular mail list software for Python
+
++ How does pymalist work
 
 pymalist works like this:
 
-#1 using fetcher it fetches mail
+# using fetcher it fetches mail
  * if NothingMore exception is raised program ends
  * if other exception is raised, it is being passed to reactor
    and program ends
-#2 mail is processed with processor
-#3 processed mail is distributed with distributor
-#4 go to #1
+# mail is processed with processor
+# processed mail is distributed with distributor
+# go to #1
 
 In component raises an exception (other than NothingMore) it
 gets handled by reactor.
@@ -17,6 +21,8 @@ You have to supply fetcher, processor, distributor and reactor
 objects the the play method. Basically you need to write a few
 lines of code to do it, but you can use builtin fetchers,
 distributors, processors and reactors.
+
+[[code]]
 
    ---------------                  ---------------
   |               |   exception    |               |
@@ -38,15 +44,19 @@ distributors, processors and reactors.
   |               |
    ---------------
 
+[[/code]]
+
++ The basic components
+
 The basic fetchers are:
 * Pop3Fetcher - to fetch mails from dedicated POP3 account
 * StdInFetcher - to get one mail from stdin (from procmail)
 
 The basic distributors are:
 * SmtpDistributor - to distribute mails with SMTP server
-* ChainDistributor - distribute mails with many distributors
-* DistributeToDistributor - distribute to given list of
-                            recipients using given distributor
+* MultipleDistributor - distribute mails with many distributors
+* DeliverToDistributor - distribute to given list of
+                         recipients using given distributor
 
 The basic processors are:
 * SingleListProcessor - used for a sigle list list
@@ -58,11 +68,14 @@ The basic processors are:
 The basic reactor is:
 * StdErrLogger - loggs each exception to standard error
 
++ Example mail list server
+
 Example script, that fetches all mail from POP3 account processes
 two maillists and distributes mails with SMTP server and send each
 copy of mail to archive mail address using the same SMTP distributor
 as for distributing the emails to real recipients:
 
+[[code]]
 
 from pymalist import play
 from fetchers import *
@@ -86,7 +99,10 @@ smtp = SmtpDistributor(
 
 play(
     fetcher = pop3,
-    distributor = smtp,
+    distributor = MultipleDistributor(
+        smtp,
+        DeliverToDistributor(['archive@example.com'], smtp),
+    )
 
     processor = MoreListsProcessor(
         SingleListProcessor(
@@ -103,15 +119,63 @@ play(
     reactor=StdErrLogger(),
 )
 
+[[/code]]
 
 You'll want to run the script periodically (for example in cron).
+
++ Customization or adding new features
 
 If you need another logic to fetch, distribute, process or react
 to exceptions, you need to create a custom fetcher, distributor,
 processor or reactor.
 
 Every fetcher object must have "fetch" method, that returns
-the next mail as a string (along with all headers). If there
+the next mail as a email.Message object. Convert it from message
+string by email.message_from_string(message_string). If there
 is no new mail, raise fetchers.NothingMore exception.
 
 Every distributor object must have "distribute" method, that
+gets mail message (email.Message) with has additional
+properties set:
+
+* ml_sender - the original sender
+* ml_send_to - addresses to send message to
+* ml_list - "Mail List Name" <address@somewhere>
+
+Distributor should distribute the mails (but of course it can
+do anything - store, archive, send, play music, eject CD tray
+and play 8-bit music on PC speaker).
+
+Every processor must have "process" method, that takes one
+argument - the mail message fetched and returns mail message
+enhanced with at least ml_sender, ml_send_to and ml_list
+properties (see above for explanation). An exception should
+be raised if the message should not be distributed because of
+some violation (person can't post to list or something). If
+message should be delivered, but there is zero recipients,
+just set ml_send_to property to emtpy list: [].
+
+Every reactor implements "react" method that takes two
+arguments: type of error (currently string "fetcher",
+"processor" or "distributor") and the exception that was
+raised. NothingMore exception raised by fetcher is not passed
+to reactor.
+
++ Why did I write this
+
+I wrote this software in a few hours, because I didn't find
+any good mail list software that was flexible anough to
+
+* read email from a remote mailbox (with POP3 or IMAP)
+* distribute emails with a remote SMTP server (possibly using
+  the same mailbox)
+* require no root permissions
+* is modular enough
+
+I know my mail list is not perfect, because it has no
+input/output queues, no (un)subscribe features nor mail
+archive, but using the concepts of fetchers, distributors,
+processors and reactors they can be easily plugged-in.
+
+Author: Piotr Gabryjeluk
+Started: 22 May 2009
