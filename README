@@ -1,0 +1,117 @@
+Pymalist is a minimal and modular mail list software for Python
+
+pymalist works like this:
+
+#1 using fetcher it fetches mail
+ * if NothingMore exception is raised program ends
+ * if other exception is raised, it is being passed to reactor
+   and program ends
+#2 mail is processed with processor
+#3 processed mail is distributed with distributor
+#4 go to #1
+
+In component raises an exception (other than NothingMore) it
+gets handled by reactor.
+
+You have to supply fetcher, processor, distributor and reactor
+objects the the play method. Basically you need to write a few
+lines of code to do it, but you can use builtin fetchers,
+distributors, processors and reactors.
+
+   ---------------                  ---------------
+  |               |   exception    |               |
+  |    fetcher    |--------------->|    reactor    |
+  |               |                |               |
+   ---------------                  ---------------
+          |                             ^     ^
+          |                             |     |
+   ---------------                      |     |
+  |               |       exception     |     |
+  |   processor   |---------------------      |
+  |               |                           |
+   ---------------                            |
+          |                                   |
+          |                                   |
+   ---------------                            |
+  |               |         exception         |
+  |  distributor  |---------------------------
+  |               |
+   ---------------
+
+The basic fetchers are:
+* Pop3Fetcher - to fetch mails from dedicated POP3 account
+* StdInFetcher - to get one mail from stdin (from procmail)
+
+The basic distributors are:
+* SmtpDistributor - to distribute mails with SMTP server
+* ChainDistributor - distribute mails with many distributors
+* DistributeToDistributor - distribute to given list of
+                            recipients using given distributor
+
+The basic processors are:
+* SingleListProcessor - used for a sigle list list
+                        (does not check To: header)
+* ManyListsProcessor - container of many SingleListProcessors
+                       that directs the mail to be processed
+                       by right one
+
+The basic reactor is:
+* StdErrLogger - loggs each exception to standard error
+
+Example script, that fetches all mail from POP3 account processes
+two maillists and distributes mails with SMTP server and send each
+copy of mail to archive mail address using the same SMTP distributor
+as for distributing the emails to real recipients:
+
+
+from pymalist import play
+from fetchers import *
+from processors import *
+from distributors import *
+from reactors import *
+
+pop3 = Pop3Fetcher(
+    host     = 'pop3.example.com',
+    user     = 'example',
+    password = 'hackyou',
+    ssl      = True,
+)
+
+smtp = SmtpDistributor(
+    host     = 'smtp.example.com',
+    user     = 'example',
+    password = 'hackyou',
+    tls      = True,
+)
+
+play(
+    fetcher = pop3,
+    distributor = smtp,
+
+    processor = MoreListsProcessor(
+        SingleListProcessor(
+            list_mail = 'Red mail list <red@list.example.com>',
+            subject_prefix = '[Red] ',
+            subscribers = ['you@example.com', 'me@example.com']
+        ),
+        SingleListProcessor(
+            list_mail = 'Green mail list <green@list.example.com>',
+            subject_prefix = '[Green] ',
+            subscribers = ['you@example.com', 'me@example.com']
+        ),
+    ),
+    reactor=StdErrLogger(),
+)
+
+
+You'll want to run the script periodically (for example in cron).
+
+If you need another logic to fetch, distribute, process or react
+to exceptions, you need to create a custom fetcher, distributor,
+processor or reactor.
+
+Every fetcher object must have "fetch" method, that returns
+the next mail as a string (along with all headers). If there
+is no new mail, raise fetchers.NothingMore exception.
+
+Every distributor object must have "distribute" method, that
