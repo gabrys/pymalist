@@ -18,12 +18,12 @@ def play(fetcher, processor, distributor, reactor):
             return
 
         try:
-            list, sender, message, recipients = processor.process(mail)
+            mail = processor.process(mail)
         except Exception, e:
             react(reactor, 'processor', e)
         else:
             try:
-                distributor.distribute(list, sender, message, recipients)
+                distributor.distribute(mail)
             except Exception, e:
                 react(reactor, 'distributor', e)
 

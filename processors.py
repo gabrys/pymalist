@@ -8,60 +8,61 @@ class NoSuchList(Exception):
     pass
 
 class DummyProcessor(object):
-    def process(self, msg):
-        return '', '', msg, []
+    def process(self, mail):
+        return mail
 
 class SingleListProcessor():
-    def __init__(self, list_mail, subject_prefix, subscribers):
-        self.list_mail = list_mail
+    def __init__(self, list_email, subject_prefix, subscribers):
+        self.list_email = list_email
         self.subject_prefix = subject_prefix
         self.subscribers = subscribers
 
-    def process(self, msg):
-        msg = email.message_from_string(msg)
+    def process(self, mail):
         try:
-            sender = msg['From']
+            sender = mail['From']
         except:
             raise NotAuthorized, "empty From, rejecting"
         
         if email.utils.parseaddr(sender)[1] not in self.subscribers:
             raise NotAuthorized, sender
         
-        try: del(msg['Sender'])
+        try: del(mail['Reply-to'])
         except: pass
-        msg['Sender'] = self.list_mail
+        mail['Reply-to'] = self.list_email
 
-        try: del(msg['Reply-to'])
+        try: del(mail['Sender'])
         except: pass
-        msg['Reply-to'] = self.list_mail
+        mail['Sender'] = self.list_email
 
         try:
-            subject = msg['Subject']
-            del(msg['Subject'])
+            subject = mail['Subject']
+            del(mail['Subject'])
         except:
             subject = "(No subject)"
 
-        if not subject.find(subject_prefix):
-            subject = subject_prefix + subject
+        if -1 == subject.find(self.subject_prefix):
+            subject = self.subject_prefix + subject
 
-        msg['Subject'] = subject
+        mail['Subject'] = subject
+        mail.ml_sender = sender
+        mail.ml_list = self.list_email
+        mail.ml_send_to = self.subscribers
 
-        return 'list', sender, msg.as_string(), self.subscribers
+        return mail
 
 class MoreListsProcessor():
     def __init__(self, *args):
         self.lists = {}
         for list in args:
-            mail = email.utils.parseaddr(list.list_mail)[1]
+            mail = email.utils.parseaddr(list.list_email)[1]
             self.lists[mail] = list
 
-    def process(self, msg_str):
+    def process(self, msg):
         try:
-            msg = email.message_from_string(msg_str)
             to = email.utils.parseaddr(msg['To'])[1]
             list = self.lists[to]
         except:
             raise NoSuchList
         else:
-            return list.process(msg_str)
+            return list.process(msg)
 

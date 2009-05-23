@@ -1,6 +1,7 @@
 
 import sys
 import poplib
+import email
 
 class NothingMore(Exception):
     pass
@@ -15,7 +16,7 @@ class StdInFetcher(object):
         else:
             val = sys.stdin.read()
             self.read = True
-            return val
+            return email.message_from_string(val)
 
 class Pop3Fetcher(object):
     def __init__(self, host, user, password, ssl=False):
@@ -34,7 +35,7 @@ class Pop3Fetcher(object):
             raise NothingMore
         mail = self.pop.retr(mailno)[1]
         self.pop.dele(mailno)
-        return "\n".join(mail)
+        return email.message_from_string("\n".join(mail))
 
     def __del__(self):
         self.pop.quit()
