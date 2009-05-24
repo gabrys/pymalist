@@ -51,6 +51,6 @@ def UniversalDistributor(options):
     type = options['distributor']
     del(options['distributor'])
     if type.upper() == 'SMTP':
-        return SmtpDistributor(*options)
+        return SmtpDistributor(**options)
     else:
         raise UnknownType, "%s distributor is unknown" % (type, )

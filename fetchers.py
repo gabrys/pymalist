@@ -47,7 +47,7 @@ def UniversalFetcher(options):
     type = options['fetcher']
     del(options['fetcher'])
     if type.upper() == 'POP3':
-        return Pop3Distributor(*options)
+        return Pop3Fetcher(**options)
     else:
         raise UnknownType, "%s distributor is unknown" % (type, )
 
