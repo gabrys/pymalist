@@ -11,7 +11,7 @@ class DummyProcessor(object):
     def process(self, mail):
         return mail
 
-class SingleListProcessor():
+class SingleListProcessor(object):
     def __init__(self, list_email, subject_prefix, subscribers):
         self.list_email = list_email
         self.subject_prefix = subject_prefix
@@ -50,7 +50,7 @@ class SingleListProcessor():
 
         return mail
 
-class MoreListsProcessor():
+class MoreListsProcessor(object):
     def __init__(self, *args):
         self.lists = {}
         for list in args:
