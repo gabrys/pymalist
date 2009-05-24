@@ -2,6 +2,9 @@
 import smtplib
 import email
 
+class UnknownType(Exception):
+    pass
+
 class DistributeToDistributor(object):
     def __init__(self, recipients, distributor):
         self.recipients = recipients
@@ -44,3 +47,10 @@ class MultipleDistributor(object):
         for distributor in self.distributors:
             distributor.distribute(mail)
 
+def UniversalDistributor(options):
+    type = options['distributor']
+    del(options['distributor'])
+    if type.upper() == 'SMTP':
+        return SmtpDistributor(*options)
+    else:
+        raise UnknownType, "%s distributor is unknown" % (type, )

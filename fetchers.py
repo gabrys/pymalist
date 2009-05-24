@@ -6,6 +6,9 @@ import email
 class NothingMore(Exception):
     pass
 
+class UnknownType(Exception):
+    pass
+
 class StdInFetcher(object):
     def __init__(self):
         self.read = False
@@ -39,4 +42,12 @@ class Pop3Fetcher(object):
 
     def __del__(self):
         self.pop.quit()
+
+def UniversalFetcher(options):
+    type = options['fetcher']
+    del(options['fetcher'])
+    if type.upper() == 'POP3':
+        return Pop3Distributor(*options)
+    else:
+        raise UnknownType, "%s distributor is unknown" % (type, )
 
