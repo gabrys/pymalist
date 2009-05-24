@@ -19,7 +19,7 @@ gets handled by reactor.
 
 You have to supply fetcher, processor, distributor and reactor
 objects the the play method. Basically you need to write a few
-lines of code to do it, but you can use builtin fetchers,
+lines of code to do it, but you can use built-in fetchers,
 distributors, processors and reactors.
 
 [[code]]
@@ -71,7 +71,7 @@ The basic reactor is:
 + Example mail list server
 
 Example script, that fetches all mail from POP3 account processes
-two maillists and distributes mails with SMTP server and send each
+two mail lists and distributes mails with SMTP server and send each
 copy of mail to archive mail address using the same SMTP distributor
 as for distributing the emails to real recipients:
 
@@ -153,7 +153,7 @@ properties (see above for explanation). An exception should
 be raised if the message should not be distributed because of
 some violation (person can't post to list or something). If
 message should be delivered, but there is zero recipients,
-just set ml_send_to property to emtpy list: [].
+just set ml_send_to property to empty list: [].
 
 Every reactor implements "react" method that takes two
 arguments: type of error (currently string "fetcher",
@@ -164,7 +164,7 @@ to reactor.
 + Why did I write this
 
 I wrote this software in a few hours, because I didn't find
-any good mail list software that was flexible anough to
+any good mail list software that was flexible enough to
 
 * read email from a remote mailbox (with POP3 or IMAP)
 * distribute emails with a remote SMTP server (possibly using
