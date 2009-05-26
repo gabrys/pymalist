@@ -1,4 +1,4 @@
-
+import base64
 import smtplib
 import email
 
@@ -25,7 +25,12 @@ class SmtpDistributor(object):
             self.smtp.starttls()
             self.smtp.ehlo()
         if user:
-            self.smtp.login(user, password)
+            try:
+                self.smtp.login(user, password)
+            except smtplib.SMTPAuthenticationError, e:
+                self.smtp.docmd("AUTH LOGIN", base64.b64encode(user))
+                self.smtp.docmd(base64.b64encode(password), "")
+                
         self.sender = sender
     
     def distribute(self, mail):
